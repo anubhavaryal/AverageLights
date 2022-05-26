@@ -1,25 +1,55 @@
 use scrap::{Capturer, Display};
+use serde::Deserialize;
 use std::error::Error;
+use std::fs;
 use std::io::ErrorKind::WouldBlock;
 use std::time::Duration;
 use tokio::time;
+use toml::Value;
 
-mod api;
+mod manager;
 
-const WAIT_TIME: u64 = 100; // wait 100ms between frames
+#[derive(Deserialize)]
+struct Config {
+    prefix: String,
+    num_lights: usize,
+    light_wait_millis: u64,
+    capture_wait_millis: u64,
+}
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
+    // read config file
+    let contents = fs::read_to_string("config.toml").expect("Unable to read 'config.toml' file.");
+    let config: Config = toml::from_str(&contents).unwrap();
+
+    println!("Successfully loaded 'config.toml' file with the following values.");
+    println!("prefix: {}", config.prefix);
+    println!("num_lights: {}", config.num_lights);
+    println!("light_wait_millis: {}", config.light_wait_millis);
+    println!("capture_wait_millis: {}", config.capture_wait_millis);
+    println!();
+
     // find display to use
-    let display = Display::primary().unwrap();
-    let mut capturer = Capturer::new(display).unwrap();
+    println!("Finding display.");
+    let display = Display::primary().expect("Unable to find display.");
+
+    println!("Create new capturer.");
+    let mut capturer = Capturer::new(display).expect("Unable to find capturer.");
+
     let (width, height) = (capturer.width(), capturer.height());
 
     // create a new light manager
-    let mut manager = api::LightManager::new();
+    let mut manager = manager::LightManager::new();
 
     // connect to all lights
-    manager.connect_to_lights("Minger", 2, 2000).await?;
+    println!("Attempting to connect to all lights.");
+    manager
+        .connect_to_lights(&config.prefix, config.num_lights, config.light_wait_millis)
+        .await?;
+
+    println!("Connected to all lights.");
+    println!("Starting program loop.");
 
     // take a screen capture
     loop {
@@ -61,7 +91,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
         manager.set_color(r as u8, g as u8, b as u8).await?;
 
         // wait before calculating next frame
-        time::sleep(Duration::from_millis(WAIT_TIME)).await;
+        time::sleep(Duration::from_millis(config.capture_wait_millis)).await;
     }
 
     Ok(())

@@ -1,0 +1,11 @@
+# prefix of each light name
+prefix = "Minger"
+
+# number of lights to connect to
+num_lights = 2
+
+# milliseconds to spend searching for available lights
+light_wait_millis = 2000
+
+# milliseconds to wait between each screen capture
+capture_wait_millis = 100
