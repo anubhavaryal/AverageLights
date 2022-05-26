@@ -5,7 +5,6 @@ use std::fs;
 use std::io::ErrorKind::WouldBlock;
 use std::time::Duration;
 use tokio::time;
-use toml::Value;
 
 mod manager;
 
@@ -17,6 +16,7 @@ struct Config {
     capture_wait_millis: u64,
 }
 
+#[allow(unreachable_code)]
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
     // read config file

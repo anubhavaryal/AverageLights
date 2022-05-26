@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 use btleplug::api::{
     Central, Characteristic, Manager as _, Peripheral as _, ScanFilter, WriteType,
 };
